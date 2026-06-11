@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GunzOTC — Action Bar Migrator</title>
+  <meta name="description" content="Convert action bars from GunzOTC legacy format or OTClientV8 to GunzOTC presets. Runs entirely in your browser.">
+  <style>
+    :root {
+      --bg: #0f1218;
+      --surface: #1a2030;
+      --surface2: #242c40;
+      --border: #3a4660;
+      --text: #e8ecf4;
+      --muted: #9aa8c4;
+      --accent: #5b8cff;
+      --accent-hover: #7aa3ff;
+      --ok: #3ecf8e;
+      --warn: #f0b429;
+      --err: #ff6b6b;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    h1 { font-size: 1.6rem; margin: 0 0 0.35rem; }
+    .sub { color: var(--muted); margin: 0 0 1.25rem; font-size: 0.95rem; }
+    .badge {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--ok);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+    }
+    .mode-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .mode-tab {
+      flex: 1;
+      min-width: 140px;
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .mode-tab:hover { border-color: var(--accent); color: var(--text); }
+    .mode-tab.active {
+      background: var(--surface2);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 { font-size: 1rem; margin: 0 0 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .drop {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .drop:hover, .drop.dragover { border-color: var(--accent); background: var(--surface2); }
+    .drop p { margin: 0.35rem 0; }
+    .drop .hint { color: var(--muted); font-size: 0.9rem; }
+    input[type="file"] { display: none; }
+    label.field { display: block; margin: 0.75rem 0 0.35rem; font-size: 0.9rem; }
+    label.row { display: flex; align-items: flex-start; gap: 0.5rem; margin: 0.5rem 0; cursor: pointer; }
+    label.row input { accent-color: var(--accent); margin-top: 0.2rem; }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .preset-list { margin: 0.75rem 0; }
+    .preset-item, .stat-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .preset-item:nth-child(odd), .stat-row:nth-child(odd) { background: var(--surface2); }
+    .preset-item .rich, .stat-row .rich { color: var(--ok); font-weight: 600; white-space: nowrap; }
+    .preset-item .poor { color: var(--muted); white-space: nowrap; }
+    .file-preview {
+      margin-top: 0.35rem;
+      padding: 0.5rem 0.65rem;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+    .file-preview strong { color: var(--text); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+    .msg {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-top: 0.75rem;
+    }
+    .msg.err { background: #3a2020; border: 1px solid var(--err); color: #ffb4b4; }
+    .msg.ok { background: #1a3028; border: 1px solid var(--ok); color: #b8f0d4; }
+    .msg.warn { background: #302a18; border: 1px solid var(--warn); color: #ffe6a8; }
+    .hidden { display: none !important; }
+    ol.steps { margin: 0; padding-left: 1.2rem; color: var(--muted); font-size: 0.9rem; }
+    ol.steps li { margin: 0.35rem 0; }
+    code { background: var(--surface2); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.85em; }
+    footer { margin-top: 2rem; font-size: 0.8rem; color: var(--muted); text-align: center; }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="badge">100% in your browser — nothing is sent to any server</span>
+    <h1>Action Bar Migrator</h1>
+    <p class="sub">Convert <strong>legacy GunzOTC</strong> character files or <strong>OTClientV8</strong> action bars into GunzOTC global <strong>preset</strong> files (<code>clientoptions_preset_*.json</code>).</p>
+
+    <div class="mode-tabs" role="tablist">
+      <button type="button" class="mode-tab active" data-mode="gunzotc" role="tab" aria-selected="true">GunzOTC legacy</button>
+      <button type="button" class="mode-tab" data-mode="otcv8" role="tab" aria-selected="false">OTClientV8 → GunzOTC</button>
+    </div>
+
+    <div class="card">
+      <h2>1. Upload file</h2>
+      <div class="drop" id="dropZone" tabindex="0" role="button" aria-label="Upload JSON file">
+        <p id="dropTitle"><strong>Drag your JSON here</strong> or click to browse</p>
+        <p class="hint" id="dropHint">Old character backup with embedded action bars — not the new empty character file</p>
+        <input type="file" id="fileInput" accept=".json,application/json">
+      </div>
+      <p id="fileName" class="hint" style="margin-top:0.75rem;"></p>
+      <div id="parseError" class="msg err hidden"></div>
+    </div>
+
+    <!-- GunzOTC legacy options -->
+    <div class="card hidden" id="gunzOptionsCard">
+      <h2>2. Options</h2>
+      <p class="hint" style="margin-top:0">Presets found in the file:</p>
+      <div class="preset-list" id="presetList"></div>
+      <label class="field" for="activePreset">Active preset for this character</label>
+      <select id="activePreset"></select>
+      <label class="row">
+        <input type="checkbox" id="migrateAllRich" checked>
+        <span>Export every preset with more than 5 slots (recommended — presets are shared by all characters)</span>
+      </label>
+      <label class="field" for="charFileName">Character file name</label>
+      <input type="text" id="charFileName" placeholder="clientoptions_Gunzodus_MyCharacter.json">
+      <div class="file-preview" id="gunzCharPreview"></div>
+    </div>
+
+    <!-- OTCv8 options -->
+    <div class="card hidden" id="otcv8OptionsCard">
+      <h2>2. Options</h2>
+      <p class="hint" style="margin-top:0">Converted from OTClientV8 <code>actionbar_v2.json</code>:</p>
+      <div class="preset-list" id="otcv8Stats"></div>
+      <label class="field" for="otcv8PresetName">Preset name (display name in-game)</label>
+      <input type="text" id="otcv8PresetName" list="presetNameSuggestions" placeholder="Kingtin">
+      <datalist id="presetNameSuggestions">
+        <option value="Druid"></option>
+        <option value="Knight"></option>
+        <option value="Paladin"></option>
+        <option value="Sorcerer"></option>
+        <option value="Monk"></option>
+      </datalist>
+      <div class="file-preview" id="otcv8PresetPreview"></div>
+      <label class="row">
+        <input type="checkbox" id="otcv8MatchCharacter" checked>
+        <span>Use my <strong>character name</strong> as the preset name (recommended — auto-selects on login)</span>
+      </label>
+      <label class="field" for="otcv8CharName">Character name (for file name &amp; preset)</label>
+      <input type="text" id="otcv8CharName" placeholder="Kingtin">
+      <label class="field" for="otcv8WorldName">World name (optional, e.g. Gunzodus)</label>
+      <input type="text" id="otcv8WorldName" placeholder="Gunzodus">
+      <div class="file-preview" id="otcv8CharPreview"></div>
+      <p class="hint" style="margin-top:0.75rem;">Tip: vocation names (Knight, Monk…) work too, but one preset per character name avoids mixing bars between chars.</p>
+    </div>
+
+    <!-- GunzOTC download -->
+    <div class="card hidden" id="gunzDownloadCard">
+      <h2>3. Download</h2>
+      <p class="hint"><strong>Close GunzOTC completely</strong> before copying files into <code>%APPDATA%\Gunzodus\GunzOTC\settings\</code></p>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="btnZip">Download all (.zip)</button>
+        <button type="button" class="btn btn-secondary" id="btnChar">Character file only</button>
+      </div>
+      <div id="dlList" style="margin-top:0.75rem;"></div>
+      <div class="msg ok hidden" id="successMsg"></div>
+    </div>
+
+    <!-- OTCv8 download -->
+    <div class="card hidden" id="otcv8DownloadCard">
+      <h2>3. Download</h2>
+      <p class="hint"><strong>Close GunzOTC completely</strong> before copying files.</p>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="btnOtcv8Zip">Download all (.zip)</button>
+        <button type="button" class="btn btn-secondary" id="btnOtcv8Preset">Preset file only (.json)</button>
+      </div>
+      <div class="msg ok hidden" id="otcv8SuccessMsg"></div>
+    </div>
+
+    <div class="card" id="installGunz">
+      <h2>Installation — GunzOTC legacy</h2>
+      <ol class="steps">
+        <li>Use an <strong>old backup</strong> where <code>hotkeySets</code> still contains your bars (e.g. <code>.pre_import_*</code>, <code>.bak_*</code>). The current character file often has <code>hotkeySets: []</code> — that cannot be migrated here.</li>
+        <li>Close GunzOTC. Open <code>%APPDATA%\Gunzodus\GunzOTC\settings\</code></li>
+        <li>Copy all <code>clientoptions_preset_*.json</code> from the ZIP.</li>
+        <li>Replace your character <code>clientoptions_*.json</code> with the new one (points to the active preset, bars live in preset files).</li>
+        <li>Merge <code>clientoptions_profiles.json</code> if provided, or pick the preset under <strong>Options → Controls → Keybinds</strong>.</li>
+        <li>Launch the game and confirm icons + hotkeys on the action bar.</li>
+      </ol>
+    </div>
+
+    <div class="card hidden" id="installOtcv8">
+      <h2>Installation — OTClientV8</h2>
+      <ol class="steps">
+        <li>Find <code>actionbar_v2.json</code> in <code>%APPDATA%\OTClientV8\otclientv8\settings\profile_N\</code> (N = profile number in OTCv8).</li>
+        <li>Upload it here. Set preset name = your <strong>character name</strong> for easiest setup.</li>
+        <li>Close GunzOTC. Copy files from the ZIP to <code>%APPDATA%\Gunzodus\GunzOTC\settings\</code></li>
+        <li>Launch GunzOTC → log in → <strong>Options → Controls → Keybinds</strong> → select your preset (or it auto-selects if the name matches your character).</li>
+      </ol>
+    </div>
+
+    <footer>
+      GunzOTC action bar migration ·
+      <a href="samples/clientoptions_Gunzodus_TestChar.json">legacy sample</a> ·
+      <a href="samples/actionbar_v2_otcv8_sample.json">OTCv8 sample</a>
+    </footer>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/OoGMjHXWLa/xVkmTqG/Mn99dZE2pd9pr6R7pMXnLFeRfhD3SW+c8Rfae4tTcb/cja0leGfcgMTg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    const DEFAULT_TEMPLATE_MAPPINGS = 5;
+    const DEFAULT_PROFILES = ["Druid", "Knight", "Paladin", "Sorcerer", "Monk"];
+    const SETTINGS_PATH = "%APPDATA%\\Gunzodus\\GunzOTC\\settings\\";
+
+    const OTCV8_ACTION_TO_USETYPE = {
+      1: "Equip", 2: "Use", 3: "UseOnYourself", 4: "UseOnTarget",
+      5: "SelectUseTarget", 6: "UseAtCursorPosition"
+    };
+
+    const EXACT_HOTKEY_FIXES = {
+      Deleteete: "Delete",
+      Insertert: "Insert"
+    };
+
+    const HOTKEY_REPLACEMENTS = {
+      Ins: "Insert", Del: "Delete", PgUp: "PageUp", PgDown: "PageDown",
+      "Num+Enter": "NumpadEnter", Return: "Enter",
+      WheelDown: "MouseDown", WheelUp: "MouseUp"
+    };
+
+    let currentMode = "gunzotc";
+    let parsedGunzData = null;
+    let parsedOtcv8Preset = null;
+
+    const modeTabs = document.querySelectorAll(".mode-tab");
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("fileInput");
+    const fileNameEl = document.getElementById("fileName");
+    const parseError = document.getElementById("parseError");
+    const dropTitle = document.getElementById("dropTitle");
+    const dropHint = document.getElementById("dropHint");
+    const gunzOptionsCard = document.getElementById("gunzOptionsCard");
+    const gunzDownloadCard = document.getElementById("gunzDownloadCard");
+    const otcv8OptionsCard = document.getElementById("otcv8OptionsCard");
+    const otcv8DownloadCard = document.getElementById("otcv8DownloadCard");
+    const installGunz = document.getElementById("installGunz");
+    const installOtcv8 = document.getElementById("installOtcv8");
+    const presetList = document.getElementById("presetList");
+    const activePreset = document.getElementById("activePreset");
+    const migrateAllRich = document.getElementById("migrateAllRich");
+    const charFileName = document.getElementById("charFileName");
+    const gunzCharPreview = document.getElementById("gunzCharPreview");
+    const btnZip = document.getElementById("btnZip");
+    const btnChar = document.getElementById("btnChar");
+    const dlList = document.getElementById("dlList");
+    const successMsg = document.getElementById("successMsg");
+    const otcv8Stats = document.getElementById("otcv8Stats");
+    const otcv8PresetName = document.getElementById("otcv8PresetName");
+    const otcv8MatchCharacter = document.getElementById("otcv8MatchCharacter");
+    const otcv8CharName = document.getElementById("otcv8CharName");
+    const otcv8WorldName = document.getElementById("otcv8WorldName");
+    const otcv8PresetPreview = document.getElementById("otcv8PresetPreview");
+    const otcv8CharPreview = document.getElementById("otcv8CharPreview");
+    const btnOtcv8Zip = document.getElementById("btnOtcv8Zip");
+    const btnOtcv8Preset = document.getElementById("btnOtcv8Preset");
+    const otcv8SuccessMsg = document.getElementById("otcv8SuccessMsg");
+
+    function sanitizeFileKey(value) {
+      return String(value || "").replace(/[^\w-]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+    }
+
+    function presetDiskName(presetName) {
+      return `clientoptions_preset_${sanitizeFileKey(presetName)}.json`;
+    }
+
+    function characterDiskName(worldName, characterName, fallback) {
+      if (fallback && fallback.trim()) {
+        let name = fallback.trim();
+        if (!name.endsWith(".json")) name += ".json";
+        if (!name.toLowerCase().startsWith("clientoptions_")) {
+          name = "clientoptions_" + sanitizeFileKey(name.replace(/^clientoptions_/i, "").replace(/\.json$/i, "")) + ".json";
+        }
+        return name;
+      }
+      const char = sanitizeFileKey(characterName);
+      const world = sanitizeFileKey(worldName);
+      if (world && char) return `clientoptions_${world}_${char}.json`;
+      if (char) return `clientoptions_${char}.json`;
+      return "clientoptions_character.json";
+    }
+
+    function jsonCompact(data) {
+      return JSON.stringify(data);
+    }
+
+    function normalizeHotkey(hotkey) {
+      hotkey = (hotkey || "").trim();
+      if (!hotkey) return "";
+      if (EXACT_HOTKEY_FIXES[hotkey]) return EXACT_HOTKEY_FIXES[hotkey];
+      return hotkey.split("+").map(part => {
+        const p = part.trim();
+        if (!p) return "";
+        if (EXACT_HOTKEY_FIXES[p]) return EXACT_HOTKEY_FIXES[p];
+        return HOTKEY_REPLACEMENTS[p] || p;
+      }).filter(Boolean).join("+");
+    }
+
+    function fixHotkeysInPreset(presetData) {
+      const copy = JSON.parse(JSON.stringify(presetData));
+      for (const mode of ["chatOn", "chatOff"]) {
+        for (const entry of copy[mode] || []) {
+          if (entry.keysequence) entry.keysequence = normalizeHotkey(entry.keysequence);
+        }
+      }
+      return copy;
+    }
+
+    function convertOtcv8Button(slot, data) {
+      if (!slot.includes(".") || slot.startsWith("__")) return null;
+      const parts = slot.split(".");
+      if (parts.length !== 2) return null;
+      const actionBar = parseInt(parts[0], 10);
+      const actionButton = parseInt(parts[1], 10);
+      if (actionBar < 1 || actionBar > 9 || actionButton < 1 || actionButton > 50) return null;
+      const buttonType = data.type;
+      if (buttonType == null) return null;
+      const actionsetting = {};
+      if (buttonType === 1) {
+        const sayText = (data.sayText || data.text || "").trim();
+        if (!sayText) return null;
+        actionsetting.chatText = sayText;
+        actionsetting.sendAutomatically = data.autoSay !== false;
+      } else if (buttonType === 2) {
+        const words = ((data.spellData || {}).words || "").trim();
+        if (!words) return null;
+        actionsetting.chatText = words;
+        actionsetting.sendAutomatically = true;
+      } else if (buttonType === 3) {
+        if (!data.itemId) return null;
+        actionsetting.useObject = parseInt(data.itemId, 10);
+        actionsetting.useType = OTCV8_ACTION_TO_USETYPE[data.action] || "Use";
+        actionsetting.upgradeTier = parseInt(data.itemTier || 0, 10);
+      } else {
+        return null;
+      }
+      return { actionBar, actionButton, actionsetting };
+    }
+
+    function importOtcv8Profile(actionbar) {
+      const mappings = [];
+      for (const [slot, data] of Object.entries(actionbar)) {
+        if (typeof data === "object" && data !== null) {
+          const converted = convertOtcv8Button(slot, data);
+          if (converted) mappings.push(converted);
+        }
+      }
+      mappings.sort((a, b) => a.actionBar - b.actionBar || a.actionButton - b.actionButton);
+
+      const hotkeys = [];
+      const seen = new Set();
+      for (const [slot, data] of Object.entries(actionbar)) {
+        if (typeof data !== "object" || data === null) continue;
+        const hotkey = normalizeHotkey(data.hotkey);
+        if (!hotkey || !slot.includes(".")) continue;
+        const action = `TriggerActionButton_${slot}`;
+        const key = `${hotkey.toLowerCase()}|${action}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        hotkeys.push({ keysequence: hotkey, actionsetting: { action } });
+      }
+
+      return fixHotkeysInPreset({
+        actionBarOptions: { mappings },
+        chatOn: hotkeys.map(h => ({ ...h, actionsetting: { ...h.actionsetting } })),
+        chatOff: hotkeys.map(h => ({ ...h, actionsetting: { ...h.actionsetting } }))
+      });
+    }
+
+    function isOtcv8Actionbar(data) {
+      if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+      if (data.hotkeyOptions) return false;
+      let slotKeys = 0;
+      for (const [key, val] of Object.entries(data)) {
+        if (/^\d+\.\d+$/.test(key) && typeof val === "object" && val !== null && val.type != null) {
+          slotKeys++;
+        }
+      }
+      return slotKeys > 0;
+    }
+
+    function isEmbeddedHotkeySets(hotkeySets) {
+      return hotkeySets && typeof hotkeySets === "object" && !Array.isArray(hotkeySets) && Object.keys(hotkeySets).length > 0;
+    }
+
+    function isMigratedCharacterFile(data) {
+      const ho = data?.hotkeyOptions;
+      if (!ho) return false;
+      return Array.isArray(ho.hotkeySets) && ho.hotkeySets.length === 0 && !!ho.currentHotkeySetName;
+    }
+
+    function isPresetOnlyFile(data) {
+      const hs = data?.hotkeyOptions?.hotkeySets;
+      if (!isEmbeddedHotkeySets(hs)) return false;
+      if (data.actionBarVisibility || data.chatOptions) return false;
+      if (data.hotkeyOptions.currentHotkeySetName) return false;
+      return Object.values(hs).some(preset => mappingCount(preset) >= 1);
+    }
+
+    function mappingCount(presetData) {
+      const m = presetData?.actionBarOptions?.mappings;
+      return Array.isArray(m) ? m.length : 0;
+    }
+
+    function buildPresetFile(presetName, presetData) {
+      return { hotkeyOptions: { hotkeySets: { [presetName]: fixHotkeysInPreset(presetData) } } };
+    }
+
+    function buildNewCharacterFile(oldData, activeName) {
+      const ho = oldData.hotkeyOptions || {};
+      const out = {};
+      if (oldData.options && !Array.isArray(oldData.options)) out.options = oldData.options;
+      else if (Array.isArray(oldData.options) && oldData.options.length) out.options = oldData.options;
+      else out.options = {};
+      if (oldData.chatOptions) out.chatOptions = oldData.chatOptions;
+      if (oldData.actionBarVisibility) out.actionBarVisibility = oldData.actionBarVisibility;
+      out.hotkeyOptions = {
+        currentHotkeySetName: activeName,
+        autoSwitchHotkeyPreset: ho.autoSwitchHotkeyPreset !== false,
+        hotkeySets: []
+      };
+      return out;
+    }
+
+    function buildCharacterFileFromScratch(presetName, visibility) {
+      return {
+        options: {},
+        chatOptions: { chatModeOn: true },
+        actionBarVisibility: visibility || {
+          actionBarShowBottom1: true,
+          actionBarShowBottom2: true,
+          actionBarShowBottom3: false,
+          actionBarShowLeft1: true,
+          actionBarShowLeft2: false,
+          actionBarShowLeft3: false,
+          actionBarShowRight1: true,
+          actionBarShowRight2: true,
+          actionBarShowRight3: true
+        },
+        hotkeyOptions: {
+          currentHotkeySetName: presetName,
+          autoSwitchHotkeyPreset: true,
+          hotkeySets: []
+        }
+      };
+    }
+
+    function buildProfilesFile(exportedPresetNames) {
+      const merged = [...DEFAULT_PROFILES];
+      const seen = new Set(merged);
+      for (const name of exportedPresetNames) {
+        if (name && !seen.has(name)) {
+          merged.push(name);
+          seen.add(name);
+        }
+      }
+      return { profiles: merged };
+    }
+
+    function buildReadme(lines) {
+      return lines.join("\r\n") + "\r\n";
+    }
+
+    function updateGunzPreviews() {
+      const active = activePreset.value;
+      gunzCharPreview.innerHTML = active
+        ? `Character file → <strong>${charFileName.value.trim() || "clientoptions_character.json"}</strong><br>Preset in-game: <strong>${active}</strong>`
+        : "";
+    }
+
+    function getOtcv8PresetName() {
+      if (otcv8MatchCharacter.checked) {
+        const char = otcv8CharName.value.trim();
+        if (char) return char;
+      }
+      const name = otcv8PresetName.value.trim();
+      return name || "Monk";
+    }
+
+    function updateOtcv8Previews() {
+      const preset = getOtcv8PresetName();
+      otcv8PresetPreview.innerHTML = `Preset file → <strong>${presetDiskName(preset)}</strong> (in-game name: <strong>${preset}</strong>)`;
+      const charFile = characterDiskName(
+        otcv8WorldName.value.trim(),
+        otcv8CharName.value.trim(),
+        ""
+      );
+      otcv8CharPreview.innerHTML = otcv8CharName.value.trim()
+        ? `Character file → <strong>${charFile}</strong> · active preset: <strong>${preset}</strong>`
+        : `Optional: fill character name to also download <code>clientoptions_*.json</code>`;
+    }
+
+    function resetUi() {
+      parsedGunzData = null;
+      parsedOtcv8Preset = null;
+      fileNameEl.textContent = "";
+      parseError.classList.add("hidden");
+      gunzOptionsCard.classList.add("hidden");
+      gunzDownloadCard.classList.add("hidden");
+      otcv8OptionsCard.classList.add("hidden");
+      otcv8DownloadCard.classList.add("hidden");
+      successMsg.classList.add("hidden");
+      otcv8SuccessMsg.classList.add("hidden");
+      dlList.innerHTML = "";
+      gunzCharPreview.textContent = "";
+      otcv8PresetPreview.textContent = "";
+      otcv8CharPreview.textContent = "";
+    }
+
+    function showError(msg, warn) {
+      parseError.textContent = msg;
+      parseError.classList.remove("hidden");
+      parseError.classList.toggle("warn", !!warn);
+      parseError.classList.toggle("err", !warn);
+      gunzOptionsCard.classList.add("hidden");
+      gunzDownloadCard.classList.add("hidden");
+      otcv8OptionsCard.classList.add("hidden");
+      otcv8DownloadCard.classList.add("hidden");
+    }
+
+    function setMode(mode, keepFile) {
+      currentMode = mode;
+      modeTabs.forEach(tab => {
+        const active = tab.dataset.mode === mode;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      installGunz.classList.toggle("hidden", mode !== "gunzotc");
+      installOtcv8.classList.toggle("hidden", mode !== "otcv8");
+      if (mode === "gunzotc") {
+        dropTitle.innerHTML = "<strong>Drag your JSON here</strong> or click to browse";
+        dropHint.textContent = "Old backup with embedded hotkeySets — e.g. .pre_import_*, .bak_*, or settings_backup folder";
+      } else {
+        dropTitle.innerHTML = "<strong>Drag actionbar_v2.json here</strong> or click to browse";
+        dropHint.textContent = "%APPDATA%\\OTClientV8\\otclientv8\\settings\\profile_N\\actionbar_v2.json";
+      }
+      if (!keepFile) resetUi();
+      else if (fileInput.files[0]) processFile(fileInput.files[0]);
+    }
+
+    function getPresetsToExport() {
+      const ho = parsedGunzData.hotkeyOptions || {};
+      const sets = ho.hotkeySets;
+      const active = activePreset.value;
+      const min = DEFAULT_TEMPLATE_MAPPINGS + 1;
+      const result = [];
+      if (migrateAllRich.checked) {
+        for (const [name, data] of Object.entries(sets)) {
+          if (mappingCount(data) >= min) result.push([name, data]);
+        }
+        if (!result.length) {
+          const data = sets[active];
+          if (data && mappingCount(data) >= 1) result.push([active, data]);
+        }
+      } else {
+        const data = sets[active];
+        if (data && mappingCount(data) >= 1) result.push([active, data]);
+      }
+      return result;
+    }
+
+    function processStandalonePresetFile(data) {
+      const hs = data.hotkeyOptions.hotkeySets;
+      const names = Object.keys(hs);
+      parsedGunzData = {
+        hotkeyOptions: {
+          currentHotkeySetName: names[0],
+          hotkeySets: hs
+        },
+        options: data.options || {},
+        chatOptions: data.chatOptions || { chatModeOn: true },
+        actionBarVisibility: data.actionBarVisibility || {}
+      };
+      charFileName.value = "clientoptions_character.json";
+      migrateAllRich.checked = true;
+      processGunzFile(parsedGunzData, true);
+      parseError.textContent = "This file is already a preset. You can re-download it with fixed hotkeys and correct file names.";
+      parseError.classList.remove("hidden");
+      parseError.classList.replace("err", "warn");
+    }
+
+    function processGunzFile(data, skipEmbeddedCheck) {
+      const ho = data.hotkeyOptions || {};
+      const sets = ho.hotkeySets;
+
+      if (!skipEmbeddedCheck) {
+        if (isMigratedCharacterFile(data)) {
+          showError(
+            "This character file is already migrated (hotkeySets is empty). " +
+            "Upload an OLD backup with embedded bars, or a clientoptions_preset_*.json file.",
+            true
+          );
+          return;
+        }
+        if (!isEmbeddedHotkeySets(sets)) {
+          showError("No embedded hotkeySets found. Use an old backup, not the current empty character file.");
+          return;
+        }
+      }
+
+      parsedGunzData = data;
+      if (fileInput.files[0]) {
+        const raw = fileInput.files[0].name.replace(/\.(bak|pre)[^/\\]*$/i, "").replace(/\.json$/i, "");
+        charFileName.value = raw.startsWith("clientoptions_") ? raw + ".json" : "clientoptions_" + raw + ".json";
+      }
+
+      presetList.innerHTML = "";
+      activePreset.innerHTML = "";
+      const names = Object.keys(sets).sort();
+      let bestCount = 0;
+      let bestName = names[0];
+      for (const name of names) {
+        const count = mappingCount(sets[name]);
+        if (count > bestCount) { bestCount = count; bestName = name; }
+        const div = document.createElement("div");
+        div.className = "preset-item";
+        const span = count > DEFAULT_TEMPLATE_MAPPINGS ? "rich" : "poor";
+        div.innerHTML = `<span>${name}</span><span class="${span}">${count} slots · ${(sets[name].chatOn || []).length} hk</span>`;
+        presetList.appendChild(div);
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = `${name} (${count} mappings)`;
+        activePreset.appendChild(opt);
+      }
+      activePreset.value = names.includes(ho.currentHotkeySetName) ? ho.currentHotkeySetName : bestName;
+      if (bestCount <= DEFAULT_TEMPLATE_MAPPINGS) {
+        parseError.textContent = "Warning: no preset has more than 5 slots. Is this the right backup?";
+        parseError.classList.remove("hidden");
+        parseError.classList.replace("err", "warn");
+      } else if (!skipEmbeddedCheck) {
+        parseError.classList.add("hidden");
+      }
+      gunzOptionsCard.classList.remove("hidden");
+      gunzDownloadCard.classList.remove("hidden");
+      updateGunzPreviews();
+      renderDownloadButtons();
+    }
+
+    function processOtcv8File(data) {
+      if (!isOtcv8Actionbar(data)) {
+        showError('Not a valid OTClientV8 actionbar_v2.json (expected keys like "1.1" with a type field).');
+        return;
+      }
+      parsedOtcv8Preset = importOtcv8Profile(data);
+      const mappings = parsedOtcv8Preset.actionBarOptions.mappings.length;
+      const hotkeys = parsedOtcv8Preset.chatOn.length;
+      if (mappings === 0) {
+        showError("No action bar buttons could be converted.");
+        return;
+      }
+      otcv8Stats.innerHTML = `
+        <div class="stat-row"><span>Action bar slots</span><span class="rich">${mappings}</span></div>
+        <div class="stat-row"><span>Hotkeys</span><span class="rich">${hotkeys}</span></div>
+      `;
+      if (!otcv8PresetName.value.trim()) otcv8PresetName.value = "Monk";
+      parseError.classList.add("hidden");
+      otcv8OptionsCard.classList.remove("hidden");
+      otcv8DownloadCard.classList.remove("hidden");
+      updateOtcv8Previews();
+    }
+
+    function processFile(file) {
+      resetUi();
+      fileNameEl.textContent = "File: " + file.name;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          const detectedOtcv8 = isOtcv8Actionbar(data);
+          const detectedGunz = isEmbeddedHotkeySets((data.hotkeyOptions || {}).hotkeySets);
+          const detectedPresetOnly = isPresetOnlyFile(data);
+
+          if (detectedOtcv8 && !detectedGunz) {
+            if (currentMode !== "otcv8") setMode("otcv8", true);
+            processOtcv8File(data);
+          } else if (isMigratedCharacterFile(data)) {
+            if (currentMode !== "gunzotc") setMode("gunzotc", true);
+            showError(
+              "This character file is already migrated (hotkeySets is empty). " +
+              "Upload an OLD backup with embedded bars, or a clientoptions_preset_*.json file.",
+              true
+            );
+          } else if (detectedPresetOnly) {
+            if (currentMode !== "gunzotc") setMode("gunzotc", true);
+            processStandalonePresetFile(data);
+          } else if (detectedGunz) {
+            if (currentMode !== "gunzotc") setMode("gunzotc", true);
+            processGunzFile(data);
+          } else if (currentMode === "otcv8") {
+            processOtcv8File(data);
+          } else {
+            processGunzFile(data);
+          }
+        } catch (e) {
+          showError("Invalid JSON: " + e.message);
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+    }
+
+    function downloadBlob(filename, content) {
+      const blob = new Blob([content], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function addPresetsToZip(zip, presets) {
+      const names = [];
+      for (const [name, data] of presets) {
+        names.push(name);
+        zip.file(presetDiskName(name), jsonCompact(buildPresetFile(name, data)));
+      }
+      return names;
+    }
+
+    function renderDownloadButtons() {
+      dlList.innerHTML = "";
+      if (!parsedGunzData) return;
+      for (const [name] of getPresetsToExport()) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn btn-secondary";
+        btn.textContent = `Preset: ${name}`;
+        btn.onclick = () => {
+          downloadBlob(
+            presetDiskName(name),
+            jsonCompact(buildPresetFile(name, parsedGunzData.hotkeyOptions.hotkeySets[name]))
+          );
+        };
+        dlList.appendChild(btn);
+      }
+    }
+
+    async function downloadGunzZip() {
+      if (!parsedGunzData || typeof JSZip === "undefined") {
+        alert("JSZip failed to load. Use individual download buttons.");
+        return;
+      }
+      const presets = getPresetsToExport();
+      if (!presets.length) {
+        alert("No presets to export.");
+        return;
+      }
+      const zip = new JSZip();
+      const names = addPresetsToZip(zip, presets);
+      const charName = characterDiskName("", "", charFileName.value.trim() || "clientoptions_character.json");
+      zip.file(charName, jsonCompact(buildNewCharacterFile(parsedGunzData, activePreset.value)));
+      zip.file("clientoptions_profiles.json", jsonCompact(buildProfilesFile(names)));
+      zip.file("README.txt", buildReadme([
+        "GunzOTC — action bar migration",
+        "",
+        "1. Close GunzOTC completely.",
+        "2. Copy ALL files to " + SETTINGS_PATH,
+        "3. If you already have clientoptions_profiles.json, merge the new preset names into it.",
+        "4. Replace your character clientoptions_*.json with the one in this ZIP.",
+        "5. Launch → Options → Controls → Keybinds → confirm preset: " + activePreset.value,
+        "",
+        "Preset files in this ZIP:"
+      ].concat(names.map(n => "  - " + presetDiskName(n) + " (preset: " + n + ")"))));
+      const blob = await zip.generateAsync({ type: "blob" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "gunzotc_actionbar_migrated.zip";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      successMsg.textContent = `Done: ${names.length} preset(s), character file, and profiles list.`;
+      successMsg.classList.remove("hidden");
+    }
+
+    async function downloadOtcv8Zip() {
+      if (!parsedOtcv8Preset || typeof JSZip === "undefined") return;
+      const presetName = getOtcv8PresetName();
+      const zip = new JSZip();
+      const presetFile = presetDiskName(presetName);
+      zip.file(presetFile, jsonCompact(buildPresetFile(presetName, parsedOtcv8Preset)));
+
+      const readme = [
+        "GunzOTC — OTClientV8 import",
+        "",
+        "1. Close GunzOTC completely.",
+        "2. Copy files to " + SETTINGS_PATH,
+        "3. Launch and log in with your character.",
+        "4. Options → Controls → Keybinds → select: " + presetName,
+        "",
+        "Preset file: " + presetFile,
+        "In-game preset name: " + presetName
+      ];
+
+      const charName = otcv8CharName.value.trim();
+      if (charName) {
+        const charFile = characterDiskName(otcv8WorldName.value.trim(), charName, "");
+        zip.file(charFile, jsonCompact(buildCharacterFileFromScratch(presetName)));
+        readme.push("Character file: " + charFile);
+        readme.push("(Only use if you do not already have a character file — otherwise edit currentHotkeySetName manually.)");
+      }
+
+      zip.file("clientoptions_profiles.json", jsonCompact(buildProfilesFile([presetName])));
+      zip.file("README.txt", buildReadme(readme));
+
+      const blob = await zip.generateAsync({ type: "blob" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "gunzotc_otcv8_import.zip";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      otcv8SuccessMsg.textContent = `Done: ${presetFile}${charName ? " + " + characterDiskName(otcv8WorldName.value.trim(), charName, "") : ""}`;
+      otcv8SuccessMsg.classList.remove("hidden");
+    }
+
+    function downloadOtcv8Preset() {
+      if (!parsedOtcv8Preset) return;
+      const presetName = getOtcv8PresetName();
+      downloadBlob(presetDiskName(presetName), jsonCompact(buildPresetFile(presetName, parsedOtcv8Preset)));
+      otcv8SuccessMsg.textContent = `Downloaded ${presetDiskName(presetName)}`;
+      otcv8SuccessMsg.classList.remove("hidden");
+    }
+
+    modeTabs.forEach(tab => tab.addEventListener("click", () => setMode(tab.dataset.mode)));
+
+    dropZone.addEventListener("click", () => fileInput.click());
+    dropZone.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") fileInput.click(); });
+    fileInput.addEventListener("change", () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
+    dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+    dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+    });
+
+    activePreset.addEventListener("change", () => { updateGunzPreviews(); renderDownloadButtons(); });
+    migrateAllRich.addEventListener("change", renderDownloadButtons);
+    charFileName.addEventListener("input", updateGunzPreviews);
+    otcv8PresetName.addEventListener("input", updateOtcv8Previews);
+    otcv8CharName.addEventListener("input", () => {
+      if (otcv8MatchCharacter.checked && otcv8CharName.value.trim()) {
+        otcv8PresetName.value = otcv8CharName.value.trim();
+      }
+      updateOtcv8Previews();
+    });
+    otcv8WorldName.addEventListener("input", updateOtcv8Previews);
+    otcv8MatchCharacter.addEventListener("change", () => {
+      if (otcv8MatchCharacter.checked && otcv8CharName.value.trim()) {
+        otcv8PresetName.value = otcv8CharName.value.trim();
+      }
+      updateOtcv8Previews();
+    });
+
+    btnZip.addEventListener("click", downloadGunzZip);
+    btnChar.addEventListener("click", () => {
+      if (!parsedGunzData) return;
+      const name = characterDiskName("", "", charFileName.value.trim() || "clientoptions_character.json");
+      downloadBlob(name, jsonCompact(buildNewCharacterFile(parsedGunzData, activePreset.value)));
+    });
+    btnOtcv8Zip.addEventListener("click", downloadOtcv8Zip);
+    btnOtcv8Preset.addEventListener("click", downloadOtcv8Preset);
+  </script>
+</body>
+</html>

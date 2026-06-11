@@ -1,0 +1,129 @@
+{
+  "options": {
+    "walkCtrlTurnDelayMs": 150,
+    "showActionBars": true
+  },
+  "chatOptions": {
+    "chatModeOn": true,
+    "lootChannelOpen": false,
+    "openChannels": []
+  },
+  "actionBarVisibility": {
+    "1": true,
+    "2": true,
+    "3": false
+  },
+  "hotkeyOptions": {
+    "autoSwitchHotkeyPreset": true,
+    "currentHotkeySetName": "Monk",
+    "hotkeySets": {
+      "Druid": {
+        "actionBarOptions": {
+          "mappings": [
+            { "actionBar": 1, "actionButton": 1, "actionsetting": { "useObject": 7876, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 2, "actionsetting": { "useObject": 268, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 3, "actionsetting": { "chatText": "exura infir", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 4, "actionsetting": { "chatText": "exori infir tera", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 5, "actionsetting": { "chatText": "exevo infir frigo hur", "sendAutomatically": true } }
+          ]
+        },
+        "chatOff": [
+          { "actionsetting": { "action": "TriggerActionButton_1.1" }, "keysequence": "F1" },
+          { "actionsetting": { "action": "TriggerActionButton_1.2" }, "keysequence": "F2" }
+        ],
+        "chatOn": [
+          { "actionsetting": { "action": "TriggerActionButton_1.1" }, "keysequence": "F1" },
+          { "actionsetting": { "action": "TriggerActionButton_1.2" }, "keysequence": "F2" }
+        ]
+      },
+      "Knight": {
+        "actionBarOptions": {
+          "mappings": [
+            { "actionBar": 1, "actionButton": 1, "actionsetting": { "useObject": 7876, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 2, "actionsetting": { "useObject": 268, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 3, "actionsetting": { "chatText": "exura infir", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 4, "actionsetting": { "chatText": "exori infir tera", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 5, "actionsetting": { "chatText": "exevo infir frigo hur", "sendAutomatically": true } }
+          ]
+        },
+        "chatOff": [
+          { "actionsetting": { "action": "TriggerActionButton_1.1" }, "keysequence": "F1" },
+          { "actionsetting": { "action": "TriggerActionButton_1.3" }, "keysequence": "F3" }
+        ],
+        "chatOn": [
+          { "actionsetting": { "action": "TriggerActionButton_1.1" }, "keysequence": "F1" },
+          { "actionsetting": { "action": "TriggerActionButton_1.3" }, "keysequence": "F3" }
+        ]
+      },
+      "Paladin": {
+        "actionBarOptions": {
+          "mappings": [
+            { "actionBar": 1, "actionButton": 1, "actionsetting": { "useObject": 7876, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 2, "actionsetting": { "useObject": 268, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 3, "actionsetting": { "chatText": "exura infir", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 4, "actionsetting": { "chatText": "exori infir tera", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 5, "actionsetting": { "chatText": "exevo infir frigo hur", "sendAutomatically": true } }
+          ]
+        },
+        "chatOff": [
+          { "actionsetting": { "action": "TriggerActionButton_1.1" }, "keysequence": "F1" }
+        ],
+        "chatOn": [
+          { "actionsetting": { "action": "TriggerActionButton_1.1" }, "keysequence": "F1" }
+        ]
+      },
+      "Sorcerer": {
+        "actionBarOptions": {
+          "mappings": [
+            { "actionBar": 1, "actionButton": 1, "actionsetting": { "useObject": 7876, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 2, "actionsetting": { "useObject": 268, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 3, "actionsetting": { "chatText": "exura", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 4, "actionsetting": { "chatText": "exori flam", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 5, "actionsetting": { "chatText": "exevo flam hur", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 6, "actionsetting": { "chatText": "exevo gran flam hur", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 7, "actionsetting": { "chatText": "utevo gran lux", "sendAutomatically": true } }
+          ]
+        },
+        "chatOff": [
+          { "actionsetting": { "action": "TriggerActionButton_1.5" }, "keysequence": "F5" },
+          { "actionsetting": { "action": "TriggerActionButton_1.6" }, "keysequence": "F6" },
+          { "actionsetting": { "chatText": "exevo gran mas flam", "sendAutomatically": true }, "keysequence": "Ctrl+F" }
+        ],
+        "chatOn": [
+          { "actionsetting": { "action": "TriggerActionButton_1.5" }, "keysequence": "F5" },
+          { "actionsetting": { "action": "TriggerActionButton_1.6" }, "keysequence": "F6" },
+          { "actionsetting": { "chatText": "exevo gran mas flam", "sendAutomatically": true }, "keysequence": "Ctrl+F" }
+        ]
+      },
+      "Monk": {
+        "actionBarOptions": {
+          "mappings": [
+            { "actionBar": 1, "actionButton": 1, "actionsetting": { "useObject": 7876, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 2, "actionsetting": { "useObject": 268, "useType": "UseOnYourself" } },
+            { "actionBar": 1, "actionButton": 3, "actionsetting": { "chatText": "exura sio", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 4, "actionsetting": { "chatText": "exori gran mas pug", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 5, "actionsetting": { "chatText": "exori med pug", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 6, "actionsetting": { "chatText": "exori mas pug", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 7, "actionsetting": { "chatText": "exevo mas nia", "sendAutomatically": true } },
+            { "actionBar": 1, "actionButton": 8, "actionsetting": { "chatText": "utevo gran lux", "sendAutomatically": true } },
+            { "actionBar": 2, "actionButton": 1, "actionsetting": { "chatText": "exevo gran mas nia", "sendAutomatically": true } }
+          ]
+        },
+        "chatOff": [
+          { "actionsetting": { "action": "TriggerActionButton_1.7" }, "keysequence": "F7" },
+          { "actionsetting": { "action": "TriggerActionButton_2.1" }, "keysequence": "F8" },
+          { "actionsetting": { "chatText": "exevo gran mas nia", "sendAutomatically": true }, "keysequence": "Ctrl+G" },
+          { "actionsetting": { "action": "TriggerActionButton_1.4" }, "keysequence": "F4" },
+          { "actionsetting": { "action": "TriggerActionButton_1.5" }, "keysequence": "F5" }
+        ],
+        "chatOn": [
+          { "actionsetting": { "action": "TriggerActionButton_1.7" }, "keysequence": "F7" },
+          { "actionsetting": { "action": "TriggerActionButton_2.1" }, "keysequence": "F8" },
+          { "actionsetting": { "chatText": "exevo gran mas nia", "sendAutomatically": true }, "keysequence": "Ctrl+G" },
+          { "actionsetting": { "action": "TriggerActionButton_1.4" }, "keysequence": "F4" },
+          { "actionsetting": { "action": "TriggerActionButton_1.5" }, "keysequence": "F5" }
+        ]
+      }
+    }
+  }
+}
